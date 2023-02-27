@@ -1,7 +1,10 @@
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
 import TablePagination from "@mui/material/TablePagination";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useDebounce from "../utils/debounce";
+import Post from "./Post";
 
 function PaginationMenu(props: any): React.ReactElement {
   const location = useLocation();
@@ -12,6 +15,12 @@ function PaginationMenu(props: any): React.ReactElement {
 
   const debouncedPage = useDebounce(page, 500);
   const debouncedPerPage = useDebounce(perPage, 500);
+
+  const [data, setData] = useState({ posts: [{ title: "init" }] });
+
+  useEffect(() => {
+    callApi();
+  }, []);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -24,6 +33,8 @@ function PaginationMenu(props: any): React.ReactElement {
     if (perPageParam) {
       setPerPage(Number(perPageParam));
     }
+
+    callApi();
   }, [location.search]);
 
   useEffect(() => {
@@ -48,15 +59,10 @@ function PaginationMenu(props: any): React.ReactElement {
       })
       .then((data) => {
         console.log(data);
-        // setData(data);
-        // setTotalPages(
-        //   Math.ceil(response.headers.get("x-total-count") / perPage)
-        // );
-        // setIsLoading(false);
+        setData(data);
       })
       .catch((error) => {
         console.error(error);
-        // setIsLoading(false);
       });
   };
 
@@ -65,9 +71,6 @@ function PaginationMenu(props: any): React.ReactElement {
     page: number
   ) => {
     setPage(page);
-
-    callApi();
-
     const searchParams = new URLSearchParams(location.search);
     searchParams.set("page", String(debouncedPage));
     searchParams.set("per_page", String(debouncedPerPage));
@@ -79,9 +82,6 @@ function PaginationMenu(props: any): React.ReactElement {
   ) => {
     const perPage = event.target.value;
     setPerPage(Number(perPage));
-
-    callApi();
-
     const searchParams = new URLSearchParams(location.search);
     searchParams.set("page", String(debouncedPage));
     searchParams.set("per_page", String(debouncedPerPage));
@@ -89,14 +89,30 @@ function PaginationMenu(props: any): React.ReactElement {
   };
 
   return (
-    <TablePagination
-      component="div"
-      count={100}
-      page={page}
-      rowsPerPage={perPage}
-      onPageChange={handlePageChange}
-      onRowsPerPageChange={handlePerPageChange}
-    />
+    <div>
+      <TablePagination
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 9999,
+          backgroundColor: "white",
+        }}
+        component="div"
+        count={100}
+        page={page}
+        rowsPerPage={perPage}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handlePerPageChange}
+      />
+
+      <Grid container spacing={2} mt={"20px"}>
+        {data.posts.map((post) => (
+          <Grid item xs={3}>
+            <Post post={post}></Post>
+          </Grid>
+        ))}
+      </Grid>
+    </div>
   );
 }
 
